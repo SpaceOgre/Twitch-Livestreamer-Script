@@ -1,7 +1,10 @@
 # This script will check all twitch channels added to the $channels array and list those that are live.
 # You can then choose which you want to watch and livestreamer does the rest.
-# Require: livestreamer (http://docs.livestreamer.io/)
-# Optional: HexChat (https://hexchat.github.io/)
+# Require: 
+#   PowerShell 4 (https://www.microsoft.com/en-us/download/details.aspx?id=40855)
+#   livestreamer (http://docs.livestreamer.io/)
+# Optional: 
+#   HexChat (https://hexchat.github.io/)
 
 # DO NOT CHANGE THIS
 #------------------------------------------------------------------------------
