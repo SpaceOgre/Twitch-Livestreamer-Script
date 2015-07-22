@@ -38,6 +38,12 @@ foreach ($stream in $streams){
 		$i++;
 }
 
+if($liveChannels.Count -eq 0){
+	echo "No channels are live, exiting...";
+	echo "";
+	Exit;
+}
+
 echo "----------------------";
 echo "";
 
