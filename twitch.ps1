@@ -66,8 +66,12 @@ echo "----------------------";
 echo "";
 
 DO {
-	[int] $choice = Read-Host -Prompt "Choose one of the above numbers"
+	$choice = Read-Host -Prompt "Choose one of the above numbers or type 'exit'/'e'"
 
+	if($choice -eq "exit" -Or ($choice -eq "e")){
+		Exit;
+	}
+	
 	if($choice -le $($liveChannels.Count - 1)){
 		if($hexChatPath -ne $null -And (Test-Path $hexChatPath)){
 			& $hexChatPath $("irc://Twitch/#" + $liveChannels[$choice].ToLower())
