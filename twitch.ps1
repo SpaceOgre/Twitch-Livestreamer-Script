@@ -66,8 +66,9 @@ echo "----------------------";
 echo "";
 
 DO {
-	$choice = Read-Host -Prompt "Choose one of the above numbers or type 'exit'/'e'"
-
+	$choice = Read-Host -Prompt "Choose one of the above numbers or type [e]xit";
+	echo "";
+	
 	if($choice -eq "exit" -Or ($choice -eq "e")){
 		Exit;
 	}
@@ -76,6 +77,8 @@ DO {
 		if($hexChatPath -ne $null -And (Test-Path $hexChatPath)){
 			& $hexChatPath $("irc://Twitch/#" + $liveChannels[$choice].ToLower())
 		}
+		echo "Livestreamer output: ";
+		echo "----------------------";
 		& "livestreamer" $($url + $liveChannels[$choice]) $quality
 		break;
 	}
