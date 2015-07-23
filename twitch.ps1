@@ -18,7 +18,7 @@ $apiUrl = "https://api.twitch.tv/kraken/streams/";
 # Set quality to use: see livestreamer documentation
 $quality = "best";
 # Add channels you want checked here
-$channels = @("AdmiralBulldog", "RaizQT", "ProjectPT", "BeyondTheSummit", "Bacon_Donut", "DansGaming", "ZiggyDLive", "sc2proleague");
+$channels = @("AdmiralBulldog", "RaizQT", "ProjectPT", "BeyondTheSummit", "Bacon_Donut", "DansGaming", "ZiggyDLive", "sc2proleague", "amazhs");
 #------------------------------------------------------------------------------
 
 # Optional Settings - Comment out the options you don't want
@@ -54,7 +54,7 @@ DO {
 	[int] $choice = Read-Host -Prompt "Choose one of the above numbers"
 
 	if($choice -le $($liveChannels.Count - 1)){
-		if($hexChatPath -ne $null){
+		if($hexChatPath -ne $null -And Test-Path $hexChatPath){
 			& $hexChatPath $("irc://Twitch/#" + $liveChannels[$choice].ToLower())
 		}
 		& "livestreamer" $($url + $liveChannels[$choice]) $quality
