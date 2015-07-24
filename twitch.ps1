@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# This script will check all twitch channels added to the $channels array 
+# This script will check all twitch channels added to the channels.txt file
 # and list those that are live. You can then choose which you want to watch 
 # and livestreamer does the rest.
 # 
