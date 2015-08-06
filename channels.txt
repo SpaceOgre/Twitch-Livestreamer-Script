@@ -10,3 +10,5 @@ amazhs
 Willywonka_HC
 CohhCarnage
 Santzo84
+nl_kripp
+dota2ti
