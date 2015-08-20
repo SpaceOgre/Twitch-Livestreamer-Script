@@ -11,9 +11,10 @@
 #------------------------------------------------------------------------------
 # DO NOT CHANGE THIS
 #------------------------------------------------------------------------------
-$liveChannels = {@()}.Invoke();
 $url = "http://www.twitch.tv/";
-$apiUrl = "https://api.twitch.tv/kraken/streams/";
+$apiUrl = "https://api.twitch.tv/kraken";
+$streamsUrl = $apiUrl + "/streams";
+$followingUrl = $apiUrl + "/users/{0:S}/follows/channels?limit=100";
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -21,9 +22,11 @@ $apiUrl = "https://api.twitch.tv/kraken/streams/";
 #------------------------------------------------------------------------------
 # Set quality to use: see livestreamer documentation
 $quality = "best";
-#
-# Add channels you want checked to a file called "channels.txt" and put it in
-# the same folder as this script.
+
+# To check channels that you have followed set username
+$twitchUsername = "spaceogre";
+# Otherwise you can add channels you want checked to a file called 
+# "channels.txt" and put it in the same folder as this script.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -34,56 +37,110 @@ $quality = "best";
 $hexChatPath = "C:\Program Files\HexChat\hexchat.exe";
 #------------------------------------------------------------------------------
 
-cls;
+#------------------------------------------------------------------------------
+# Functions
+#------------------------------------------------------------------------------
+function main{
+    cls;
 
-if(!(Test-Path "channels.txt")){
-	echo "channels.txt is missing!";
-	echo "Add it to the same folder as the script, ";
-	echo "with one channel per line.";
-	Exit;
+    $channels = getChannels;
+
+    echo "Channels that are live"
+    printHR;
+
+    getLiveChannels $channels;
+
+    printHR;
+    echo "";
+
+    chooseChannel;
+
+    printHR;
+    echo "";
+
+    $choice = Read-Host -Prompt "Run script again? [Y/N]";
+
+    if($choice -like "yes" -Or ($choice -like "y")){
+        main;
+    }
 }
 
-echo "Channels that are live"
-echo "----------------------"
-
-$channels = Get-Content "channels.txt";
-$streams = (Invoke-RestMethod $($apiUrl + "?channel=" +  $($channels -join ','))).streams;
-$i = 0;
-foreach ($stream in $streams){
-		echo $("[" + $i + "] - " + $stream.channel.display_name + " - " + $stream.game);
-		write-host $("`t`t" + $stream.channel.status) -foregroundcolor "yellow";
-		$liveChannels.add($stream.channel.display_name) | Out-Null;
-		$i++;
+function getChannels{
+    if($twitchUsername -eq $null -Or $twitchUsername -eq ""){
+        return getChannelsFromFile;
+    } 
+    else{
+        return getChannelsFromUsername;
+    }
 }
 
-if($liveChannels.Count -eq 0){
-	echo "No channels are live, exiting...";
-	echo "";
-	Exit;
+function getChannelsFromFile{
+    if(!(Test-Path "channels.txt")){
+        echo "channels.txt is missing!";
+        echo "Add it to the same folder as the script, ";
+        echo "with one channel per line.";
+        Exit;
+    }
+    return Get-Content "channels.txt";
 }
 
-echo "----------------------";
-echo "";
+function getChannelsFromUsername{
+    $channels = {@()}.Invoke();
+    $follows = (Invoke-RestMethod $($followingUrl -f $twitchUsername)).follows;
+    foreach($channel in $follows){
+        $channels.Add($channel.channel.name) | Out-Null
+    }
+    return $channels;
+}
 
-DO {
-	$choice = Read-Host -Prompt "Choose one of the above numbers or type [e]xit";
-	echo "";
-	
-	if($choice -eq "exit" -Or ($choice -eq "e")){
-		Exit;
-	}
-	
-	if($choice -le $($liveChannels.Count - 1)){
-		if($hexChatPath -ne $null -And (Test-Path $hexChatPath)){
-			& $hexChatPath $("irc://Twitch/#" + $liveChannels[$choice].ToLower())
-		}
-		echo "Livestreamer output: ";
-		echo "----------------------";
-		& "livestreamer" $($url + $liveChannels[$choice]) $quality
-		break;
-	}
-	else {
-		echo "Not a valid choice";
-		echo "";
-	}
-} While ($true)
+function getLiveChannels($channels){
+    $streams = (Invoke-RestMethod $($streamsUrl + "?channel=" +  $($channels -join ','))).streams;
+    $liveChannels = {@()}.Invoke();
+    $i = 0;
+    foreach ($stream in $streams){
+            echo $("[" + $i + "] - " + $stream.channel.display_name + " - " + $stream.game);
+            write-host $("`t`t" + $stream.channel.status) -foregroundcolor "yellow";
+            $liveChannels.add($stream.channel.display_name) | Out-Null;
+            $i++;
+    }
+
+    if($liveChannels.Count -eq 0){
+        echo "No channels are live, exiting...";
+        echo "";
+        Exit;
+    }
+}
+
+function chooseChannel{
+    DO {
+        $choice = Read-Host -Prompt "Choose one of the above numbers or type [e]xit";
+        echo "";
+    
+        if($choice -eq "exit" -Or ($choice -eq "e")){
+            Exit;
+        }
+    
+        if($choice -le $($liveChannels.Count - 1)){
+            if($hexChatPath -ne $null -And (Test-Path $hexChatPath)){
+                & $hexChatPath $("irc://Twitch/#" + $liveChannels[$choice].ToLower())
+            }
+            echo "Livestreamer output: ";
+            printHR;
+            & "livestreamer" $($url + $liveChannels[$choice]) $quality
+            break;
+        }
+        else {
+            echo "Not a valid choice";
+            echo "";
+        }
+    } While ($true)
+}
+
+function printHR{
+    echo "------------------------------------------------------------------";
+}
+
+#------------------------------------------------------------------------------
+# Run the script
+#------------------------------------------------------------------------------
+main
