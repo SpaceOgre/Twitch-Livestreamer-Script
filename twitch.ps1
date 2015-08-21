@@ -45,18 +45,18 @@ function main{
 
     $channels = getChannels;
 
-    echo "Channels that are live"
+    write-host "Channels that are live"
     printHR;
 
-    getLiveChannels $channels;
+    $liveChannels = getLiveChannels $channels;
 
     printHR;
-    echo "";
+    write-host "";
 
-    chooseChannel;
+    chooseChannel $liveChannels;
 
     printHR;
-    echo "";
+    write-host "";
 
     $choice = Read-Host -Prompt "Run script again? [Y/N]";
 
@@ -76,9 +76,9 @@ function getChannels{
 
 function getChannelsFromFile{
     if(!(Test-Path "channels.txt")){
-        echo "channels.txt is missing!";
-        echo "Add it to the same folder as the script, ";
-        echo "with one channel per line.";
+        write-host "channels.txt is missing!";
+        write-host "Add it to the same folder as the script, ";
+        write-host "with one channel per line.";
         Exit;
     }
     return Get-Content "channels.txt";
@@ -88,7 +88,7 @@ function getChannelsFromUsername{
     $channels = {@()}.Invoke();
     $follows = (Invoke-RestMethod $($followingUrl -f $twitchUsername)).follows;
     foreach($channel in $follows){
-        $channels.Add($channel.channel.name) | Out-Null
+        $channels.Add($channel.channel.name) | Out-Null;
     }
     return $channels;
 }
@@ -98,23 +98,25 @@ function getLiveChannels($channels){
     $liveChannels = {@()}.Invoke();
     $i = 0;
     foreach ($stream in $streams){
-            echo $("[" + $i + "] - " + $stream.channel.display_name + " - " + $stream.game);
+            write-host $("[" + $i + "] - " + $stream.channel.display_name + " - " + $stream.game);
             write-host $("`t`t" + $stream.channel.status) -foregroundcolor "yellow";
             $liveChannels.add($stream.channel.display_name) | Out-Null;
             $i++;
     }
 
     if($liveChannels.Count -eq 0){
-        echo "No channels are live, exiting...";
-        echo "";
+        write-host "No channels are live, exiting...";
+        write-host "";
         Exit;
     }
+	
+	return $liveChannels;
 }
 
-function chooseChannel{
+function chooseChannel($liveChannels){
     DO {
         $choice = Read-Host -Prompt "Choose one of the above numbers or type [e]xit";
-        echo "";
+        write-host "";
     
         if($choice -eq "exit" -Or ($choice -eq "e")){
             Exit;
@@ -124,20 +126,20 @@ function chooseChannel{
             if($hexChatPath -ne $null -And (Test-Path $hexChatPath)){
                 & $hexChatPath $("irc://Twitch/#" + $liveChannels[$choice].ToLower())
             }
-            echo "Livestreamer output: ";
+            write-host "Livestreamer output: ";
             printHR;
             & "livestreamer" $($url + $liveChannels[$choice]) $quality
             break;
         }
         else {
-            echo "Not a valid choice";
-            echo "";
+            write-host "Not a valid choice";
+            write-host "";
         }
     } While ($true)
 }
 
 function printHR{
-    echo "------------------------------------------------------------------";
+    write-host "------------------------------------------------------------------";
 }
 
 #------------------------------------------------------------------------------
