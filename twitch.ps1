@@ -32,6 +32,10 @@ $twitchUsername = "spaceogre";
 #------------------------------------------------------------------------------
 # Optional Settings - Comment out the options you don't want
 #------------------------------------------------------------------------------
+# To not show the start menu set this to $false, the script will then default
+# to show your followed channels.
+$showStartMenu = $true;
+
 # Add path to HexChat if you want to connect to the selected channels chat.
 # HexChat needs to be configured for irc.twitch.tv. Server name: Twitch
 $hexChatPath = "C:\Program Files\HexChat\hexchat.exe";
@@ -42,7 +46,42 @@ $hexChatPath = "C:\Program Files\HexChat\hexchat.exe";
 #------------------------------------------------------------------------------
 function main{
     cls;
+	
+	if($showStartMenu){
+		write-host "TwitchTV Script - Start Menu";
+		printHR;
+		write-host "[0] - Following";
+		write-host "[1] - Enter Channel Name";
+		printHR;
+		write-host "";
+		
+		$choice = chooseNumberOrExit;
+		
+		if(!$choice -Or ($choice -eq 0)){
+			cls;
+			following;
+		}
+		elseif($choice -eq 1){
+			cls;
+			$channelName = Read-Host -Prompt "Enter Channel name";
+			write-host "";
+			startChannel($channelName);
+		}
+	}
+	else{
+		following;
+	}
+}
 
+function checkRunAgain{
+    $choice = Read-Host -Prompt "Run script again? [Y/N]";
+
+    if($choice -like "yes" -Or ($choice -like "y")){
+        main;
+    }
+}
+
+function following{
     $channels = getChannels;
 
     write-host "Channels that are live"
@@ -57,12 +96,6 @@ function main{
 
     printHR;
     write-host "";
-
-    $choice = Read-Host -Prompt "Run script again? [Y/N]";
-
-    if($choice -like "yes" -Or ($choice -like "y")){
-        main;
-    }
 }
 
 function getChannels{
@@ -115,27 +148,37 @@ function getLiveChannels($channels){
 
 function chooseChannel($liveChannels){
     DO {
-        $choice = Read-Host -Prompt "Choose one of the above numbers or type [e]xit";
-        write-host "";
-    
-        if($choice -eq "exit" -Or ($choice -eq "e")){
-            Exit;
-        }
+        $choice = chooseNumberOrExit;
     
         if($choice -le $($liveChannels.Count - 1)){
-            if($hexChatPath -ne $null -And (Test-Path $hexChatPath)){
-                & $hexChatPath $("irc://Twitch/#" + $liveChannels[$choice].ToLower())
-            }
-            write-host "Livestreamer output: ";
-            printHR;
-            & "livestreamer" $($url + $liveChannels[$choice]) $quality
-            break;
+			startChannel($liveChannels[$choice].ToLower());
         }
         else {
             write-host "Not a valid choice";
             write-host "";
         }
     } While ($true)
+}
+
+function startChannel($channelName){
+	if($hexChatPath -ne $null -And (Test-Path $hexChatPath)){
+		& $hexChatPath $("irc://Twitch/#" + $channelName)
+	}
+	write-host "Livestreamer output: ";
+	printHR;
+	& "livestreamer" $($url + $channelName) $quality
+	break;
+}
+
+function chooseNumberOrExit{
+		$choice = Read-Host -Prompt "Choose one of the above numbers (0 is default) or type [e]xit";
+        write-host "";
+    
+        if($choice -like "exit" -Or ($choice -like "e")){
+            Exit;
+        }
+		
+		return $choice;
 }
 
 function printHR{
@@ -145,4 +188,5 @@ function printHR{
 #------------------------------------------------------------------------------
 # Run the script
 #------------------------------------------------------------------------------
-main
+main;
+checkRunAgain;
